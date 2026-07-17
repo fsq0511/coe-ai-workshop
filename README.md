@@ -12,9 +12,10 @@ This repository contains general information about the College of Engineering (C
 ## Presentations
 
 - [Content Slides](Slides/)
-- Day 1: [Playing with AI: Curiosity, Mistakes, and Finding Real Co-Intelligence](Presentations/Day%201%20-%20Playing%20with%20AI%20-%20Curiosity,%20Mistakes,%20and%20Finding%20Real%20Co-Intelligence.pdf) by Tarek N. Aziz
+- Day 1: [Playing with AI: Curiosity, Mistakes, and Finding Real Co-Intelligence](Presentations/Day1%20-%20Playing%20with%20AI%20-%20Curiosity,%20Mistakes,%20and%20Finding%20Real%20Co-Intelligence.pdf) by Tarek N. Aziz
 - Day 2: Towards Open Autonomous Labs for Plant and Microbial Agentic Phenotyping by Larry York, ORNL.
-- Day 3: [From Prompts to Agents: Scalable, Efficient, and Grounded Agentic AI for Engineering Workflows](Presentations/Day%203%20-%20From%20Prompts%20to%20Agents.pdf) by Dongkuan Xu, NC State.
+- Day 3: [From Prompts to Agents: Scalable, Efficient, and Grounded Agentic AI for Engineering Workflows](Presentations/Day3%20-%20From%20Prompts%20to%20Agents.pdf) by Dongkuan Xu, NC State.
+- Day 4: [Introduction to NC State's HPC](Presentations/Day4%20-%20Introduction%20to%20NC%20State%20HPC.pdf) by Andrew Petersen, HPC, NC State. [ [Proxy5 Script](Presentations/Day4_proxy5.py) | [Bsub Script](Presentations/Day4_sglangLL3370B0.bsub) | [Slurm Script](Presentations/Day4_sglangLL3370B0.slurm) ]
 
 ## Activities
 

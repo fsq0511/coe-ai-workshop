@@ -1,0 +1,65 @@
+#!/bin/bash
+#SBATCH --job-name=sglang70b33
+#SBATCH --output=sglang.%j.out
+#SBATCH --error=sglang.%j.err
+#SBATCH --partition=gpu_partners
+#SBATCH --qos=short_gpu
+#SBATCH --gres=gpu:l40s:4
+#SBATCH -N 1
+#SBATCH --ntasks=4
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=64G
+#SBATCH --time=02:00:00
+
+source ~/.bashrc
+module load cuda/12.6
+export LD_LIBRARY_PATH=$(echo "$LD_LIBRARY_PATH" | tr ':' '\n' | grep -v '/stubs' | tr '\n' ':' | sed 's/:$//')
+
+conda activate /share/help/aapeters/sglang
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export PYTHONUNBUFFERED=1
+
+# Surface NCCL init details in the .err if distributed setup ever stalls again
+export NCCL_DEBUG=INFO
+
+SG_MODEL="/rsstu/users/a/aapeters/gpu-expansion/fineTune/models/sglang/llama3.3-70b-instruct"
+SG_HOST="0.0.0.0"
+SG_PORT="30000"
+
+echo "=== START: $(date) ==="
+echo "Node: $(hostname), GPU: $(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null)"
+echo "Model: $SG_MODEL"
+
+echo "$(hostname):${SG_PORT}" > /rsstu/users/a/aapeters/gpu-expansion/fineTune/sglang_endpoint.txt
+
+python3 -u -m sglang.launch_server \
+    --model-path "$SG_MODEL" \
+    --host "$SG_HOST" \
+    --port "$SG_PORT" \
+    --dtype bfloat16 \
+    --tp 4 \
+    --disable-cuda-graph \
+    --log-level info &
+
+SGLANG_PID=$!
+trap "kill $SGLANG_PID 2>/dev/null; rm -f /rsstu/users/a/aapeters/gpu-expansion/fineTune/sglang_endpoint.txt" EXIT TERM INT
+
+echo "=== Waiting for server to be ready (up to 30 min) ==="
+READY=0
+for i in $(seq 1 180); do
+    sleep 10
+    if ! kill -0 $SGLANG_PID 2>/dev/null; then echo "ERROR: sglang died"; exit 1; fi
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:$SG_PORT/health 2>/dev/null)
+    if [ "$STATUS" = "200" ]; then
+        READY=1
+        echo "=== Server ready after $((i * 10))s at $(date) ==="
+        break
+    fi
+    [ $((i % 6)) -eq 0 ] && echo "  still waiting... ${i}0s elapsed"
+done
+
+[ $READY -ne 1 ] && echo "ERROR: server not ready after 30 min" && exit 1
+
+wait $SGLANG_PID
+echo "=== sglang exited at $(date) ==="
